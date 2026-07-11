@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Chem Prep</title>
+<meta name="theme-color" content="#152540">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chem Prep">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+html, body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#152540;
+    touch-action:manipulation;
+    font-family:"Space Grotesk",ui-rounded,-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+}
+body.overlayOpen{
+    background-color:#152540;
+}
+#app{
+    width:100%;
+    height:100%;
+}
+#list{
+    width:100%;
+    height:100%;
+    overflow-y:auto;
+    overflow-x:hidden;
+    box-sizing:border-box;
+    padding:calc(86px + env(safe-area-inset-top)) 26px 32px 26px;
+}
+#examWrap{
+    position:fixed;
+    top:calc(14px + env(safe-area-inset-top));
+    left:22px;
+    right:22px;
+    height:24px;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:#e3b23c;
+    font-size:15px;
+    font-weight:600;
+}
+#examWrap svg{
+    width:16px;
+    height:16px;
+    flex:0 0 16px;
+}
+.row{
+    display:flex;
+    align-items:flex-start;
+    width:100%;
+    box-sizing:border-box;
+    gap:16px;
+    margin-bottom:2px;
+}
+.circle{
+    flex:0 0 24px;
+    width:24px;
+    height:24px;
+    margin-top:9px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.4);
+    background:transparent;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s ease, border-color .15s ease;
+}
+.circle svg{
+    width:14px;
+    height:14px;
+    opacity:0;
+    transform:scale(.6);
+    transition:opacity .15s ease, transform .15s ease;
+}
+.circle.done{
+    background:#e3b23c;
+    border-color:#e3b23c;
+}
+.circle.pop{
+    animation:pop .28s ease;
+}
+@keyframes pop{
+    0%{transform:scale(1);}
+    35%{transform:scale(1.25);}
+    100%{transform:scale(1);}
+}
+.circle.done svg{
+    opacity:1;
+    transform:scale(1);
+}
+.text{
+    flex:1 1 auto;
+    min-width:0;
+    color:white;
+    font-size:27px;
+    font-weight:400;
+    line-height:1.45;
+    outline:none;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+    caret-color:#e3b23c;
+    -webkit-appearance:none;
+    appearance:none;
+}
+.text.done{
+    opacity:0.5;
+    text-decoration:line-through;
+    text-decoration-thickness:1.5px;
+    text-decoration-color:rgba(255,255,255,0.6);
+}
+.fab{
+    position:fixed;
+    right:20px;
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    background:#203a5c;
+    border:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 2px 10px rgba(0,0,0,0.35);
+    -webkit-tap-highlight-color:transparent;
+    z-index:10;
+}
+#chaptersBtn{
+    bottom:76px;
+}
+#calBtn{
+    bottom:20px;
+}
+.fab svg{
+    width:21px;
+    height:21px;
+}
+#overlay, #chaptersOverlay{
+    position:fixed;
+    inset:0;
+    background:#152540;
+    display:none;
+    flex-direction:column;
+    z-index:20;
+    box-sizing:border-box;
+    padding:calc(28px + env(safe-area-inset-top)) 22px 28px 22px;
+    overflow-y:auto;
+}
+#overlay.open, #chaptersOverlay.open{
+    display:flex;
+}
+.ovHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    color:white;
+    margin-top:8px;
+    margin-bottom:18px;
+}
+.ovHeader .navBtn{
+    background:none;
+    border:none;
+    color:white;
+    font-size:22px;
+    padding:6px 10px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+}
+.ovHeader .monthLabel{
+    font-size:20px;
+    font-weight:600;
+}
+.ovTitle{
+    color:white;
+    font-size:20px;
+    font-weight:600;
+    margin-top:8px;
+    margin-bottom:6px;
+}
+.closeX{
+    position:absolute;
+    top:calc(14px + env(safe-area-inset-top));
+    right:22px;
+    background:none;
+    border:none;
+    color:white;
+    font-size:22px;
+    line-height:1;
+    padding:6px 10px;
+    cursor:pointer;
+    z-index:1;
+    -webkit-tap-highlight-color:transparent;
+}
+.weekRow{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    color:rgba(255,255,255,0.45);
+    font-size:13px;
+    text-align:center;
+    margin-bottom:6px;
+}
+.grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    row-gap:6px;
+}
+.dayCell{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    height:44px;
+    color:white;
+    font-size:15px;
+    border-radius:10px;
+    cursor:pointer;
+    position:relative;
+    -webkit-tap-highlight-color:transparent;
+}
+.dayCell.empty{
+    cursor:default;
+}
+.dayCell.hasData{
+    font-weight:600;
+}
+.dayCell .dot{
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    background:#e3b23c;
+    margin-top:3px;
+}
+.dayCell.today{
+    outline:1.5px solid rgba(227,178,60,0.7);
+}
+#dayView{
+    display:none;
+    flex-direction:column;
+}
+#dayView.open{
+    display:flex;
+}
+#dayView .dayTitle{
+    color:white;
+    font-size:20px;
+    font-weight:600;
+    margin-bottom:18px;
+}
+.backBtn{
+    background:none;
+    border:none;
+    color:white;
+    font-size:16px;
+    align-self:flex-start;
+    margin-bottom:14px;
+    cursor:pointer;
+    padding:4px 0;
+    -webkit-tap-highlight-color:transparent;
+}
+.viewRow{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:10px;
+}
+.viewCircle{
+    flex:0 0 22px;
+    width:22px;
+    height:22px;
+    margin-top:8px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.4);
+    background:transparent;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s ease, border-color .15s ease;
+}
+.viewCircle.done{
+    background:#e3b23c;
+    border-color:#e3b23c;
+}
+.viewCircle.pop{
+    animation:pop .28s ease;
+}
+.viewCircle svg{
+    width:13px;
+    height:13px;
+    opacity:0;
+    transform:scale(.6);
+    transition:opacity .15s ease, transform .15s ease;
+}
+.viewCircle.done svg{
+    opacity:1;
+    transform:scale(1);
+}
+.viewText{
+    color:white;
+    font-size:18px;
+    line-height:1.4;
+    outline:none;
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+    caret-color:#e3b23c;
+    flex:1 1 auto;
+    min-width:0;
+}
+.viewText.done{
+    opacity:0.5;
+    text-decoration:line-through;
+}
+.progressWrap{
+    margin-bottom:20px;
+}
+.progressTop{
+    display:flex;
+    justify-content:space-between;
+    color:rgba(255,255,255,0.7);
+    font-size:14px;
+    margin-bottom:8px;
+}
+.progressTop .pct{
+    color:#e3b23c;
+    font-weight:700;
+}
+.progressBarBg{
+    width:100%;
+    height:8px;
+    border-radius:4px;
+    background:rgba(255,255,255,0.12);
+    overflow:hidden;
+}
+.progressBarFill{
+    height:100%;
+    background:#e3b23c;
+    border-radius:4px;
+    transition:width .3s ease;
+}
+.motivate{
+    color:rgba(255,255,255,0.55);
+    font-size:13px;
+    margin-top:8px;
+}
+.chapterBlock{
+    margin-bottom:10px;
+    border-radius:14px;
+    background:rgba(255,255,255,0.045);
+    overflow:hidden;
+}
+.chapterHeader{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 14px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+}
+.chapterHeaderLeft{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    min-width:0;
+}
+.chapterTitleTxt{
+    color:white;
+    font-size:16px;
+    font-weight:600;
+}
+.chapterCount{
+    color:rgba(255,255,255,0.5);
+    font-size:12px;
+}
+.chapterArrow{
+    width:20px;
+    height:20px;
+    flex:0 0 20px;
+    color:#e3b23c;
+    transition:transform .25s ease;
+}
+.chapterBlock.expanded .chapterArrow{
+    transform:rotate(90deg);
+}
+.chapterLessons{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .3s ease;
+}
+.chapterLessonsInner{
+    padding:2px 14px 16px 14px;
+}
+button{
+    -webkit-appearance:none;
+    appearance:none;
+    -webkit-tap-highlight-color:transparent;
+    outline:none;
+}
+button:active{
+    background-color:inherit;
+}
+.bubble{
+    position:fixed;
+    border-radius:50%;
+    background:#e3b23c;
+    pointer-events:none;
+    z-index:999;
+    animation:bubbleRise .85s ease-out forwards;
+}
+@keyframes bubbleRise{
+    0%{ opacity:0.95; transform:translate(0,0) scale(1); }
+    100%{ opacity:0; transform:translate(var(--dx), var(--dy)) scale(.3); }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="examWrap">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 3H15M12 3V7M12 7C7.58 7 4 10.58 4 15C4 19.42 7.58 21 12 21C16.42 21 20 19.42 20 15C20 10.58 16.42 7 12 7Z" stroke="#e3b23c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span id="examText"></span>
+</div>
+
+<div id="list"></div>
+
+<button id="chaptersBtn" class="fab" aria-label="Chapters">
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 2H15" stroke="white" stroke-width="1.8" stroke-linecap="round"/><path d="M10 2V8.5L4.5 17.5C3.8 18.7 4.7 20.2 6.1 20.2H17.9C19.3 20.2 20.2 18.7 19.5 17.5L14 8.5V2" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.5 15H16.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+</button>
+<button id="calBtn" class="fab" aria-label="Calendar">
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="16" rx="2" stroke="white" stroke-width="1.8"/><path d="M3 9.5H21" stroke="white" stroke-width="1.8"/><path d="M8 3V6.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/><path d="M16 3V6.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg>
+</button>
+
+<div id="overlay">
+    <button class="closeX" id="closeCal" aria-label="Close">&times;</button>
+    <div id="calView">
+        <div class="ovHeader">
+            <button class="navBtn" id="prevMonth">&#8249;</button>
+            <div class="monthLabel" id="monthLabel"></div>
+            <button class="navBtn" id="nextMonth">&#8250;</button>
+        </div>
+        <div class="weekRow">
+            <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+        </div>
+        <div class="grid" id="calGrid"></div>
+    </div>
+    <div id="dayView">
+        <button class="backBtn" id="backToCal">&#8249; Back</button>
+        <div class="dayTitle" id="dayTitle"></div>
+        <div id="dayItems"></div>
+    </div>
+</div>
+
+<div id="chaptersOverlay">
+    <button class="closeX" id="closeChapters" aria-label="Close">&times;</button>
+    <div class="ovTitle">Chapters</div>
+    <div class="progressWrap">
+        <div class="progressTop">
+            <span id="progressCount">0 of 0 lessons done</span>
+            <span class="pct" id="progressPct">0%</span>
+        </div>
+        <div class="progressBarBg"><div class="progressBarFill" id="progressFill" style="width:0%"></div></div>
+        <div class="motivate" id="motivateText">Let's get started</div>
+    </div>
+    <div id="chapterItems"></div>
+</div>
+
+</div>
+<script>
+const checkSVG='<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12.5L9.5 18L20 6" stroke="#152540" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const arrowSVG='<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 5L16 12L9 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+let audioCtx=null;
+function getCtx(){
+    if(!audioCtx){
+        audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    }
+    if(audioCtx.state==="suspended"){
+        audioCtx.resume();
+    }
+    return audioCtx;
+}
+
+function playTick(isDone){
+    try{
+        const ctx=getCtx();
+        const now=ctx.currentTime;
+
+        const bufferSize=Math.floor(ctx.sampleRate*0.12);
+        const buffer=ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data=buffer.getChannelData(0);
+        for(let i=0;i<bufferSize;i++){
+            data[i]=(Math.random()*2-1)*(1-i/bufferSize);
+        }
+        const noise=ctx.createBufferSource();
+        noise.buffer=buffer;
+        const bandpass=ctx.createBiquadFilter();
+        bandpass.type="bandpass";
+        bandpass.frequency.setValueAtTime(isDone?2600:1400, now);
+        bandpass.frequency.exponentialRampToValueAtTime(isDone?1200:2200, now+0.1);
+        bandpass.Q.value=1.1;
+        const noiseGain=ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.22, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now+0.13);
+        noise.connect(bandpass);
+        bandpass.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        noise.start(now);
+        noise.stop(now+0.13);
+
+        const osc=ctx.createOscillator();
+        const oscGain=ctx.createGain();
+        osc.type="sine";
+        if(isDone){
+            osc.frequency.setValueAtTime(720, now);
+            osc.frequency.exponentialRampToValueAtTime(1180, now+0.09);
+        }else{
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(560, now+0.08);
+        }
+        oscGain.gain.setValueAtTime(0.13, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now+0.12);
+        osc.connect(oscGain);
+        oscGain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now+0.13);
+    }catch(e){}
+}
+
+function spawnBubbles(el){
+    try{
+        const rect=el.getBoundingClientRect();
+        const cx=rect.left+rect.width/2;
+        const cy=rect.top+rect.height/2;
+        const n=5;
+        for(let i=0;i<n;i++){
+            const b=document.createElement("div");
+            b.className="bubble";
+            const size=3+Math.random()*4;
+            b.style.width=size+"px";
+            b.style.height=size+"px";
+            b.style.left=cx+"px";
+            b.style.top=cy+"px";
+            const dx=(Math.random()*44-22)+"px";
+            const dy=(-34-Math.random()*22)+"px";
+            b.style.setProperty("--dx",dx);
+            b.style.setProperty("--dy",dy);
+            b.style.animationDelay=(Math.random()*0.06)+"s";
+            document.body.appendChild(b);
+            setTimeout(()=>b.remove(),900);
+        }
+    }catch(e){}
+}
+
+// ---------- Daily tasks ----------
+const list=document.getElementById("list");
+
+function todayKey(){
+    const d=new Date();
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function loadAllDays(){
+    try{
+        const raw=JSON.parse(localStorage.getItem("chem-days"));
+        if(raw && typeof raw==="object") return raw;
+    }catch(e){}
+    return {};
+}
+function saveAllDays(days){
+    localStorage.setItem("chem-days", JSON.stringify(days));
+}
+
+const TODAY=todayKey();
+let allDays=loadAllDays();
+
+let items=[];
+let lastToggled=null;
+if(Array.isArray(allDays[TODAY]) && allDays[TODAY].length){
+    items=allDays[TODAY];
+}else{
+    items=[{text:"",done:false}];
+}
+
+function save(){
+    allDays[TODAY]=items;
+    saveAllDays(allDays);
+}
+
+function render(){
+    list.innerHTML="";
+    items.forEach((item,i)=>{
+        const row=document.createElement("div");
+        row.className="row";
+
+        const circle=document.createElement("button");
+        circle.type="button";
+        circle.className="circle"+(item.done?" done":"");
+        circle.innerHTML=checkSVG;
+        if(i===lastToggled){
+            circle.classList.add("pop");
+            circle.addEventListener("animationend",()=>circle.classList.remove("pop"));
+        }
+        circle.addEventListener("click",()=>{
+            const willBeDone=!item.done;
+            if(navigator.vibrate) navigator.vibrate(15);
+            playTick(willBeDone);
+            if(willBeDone) spawnBubbles(circle);
+            lastToggled=i;
+            toggle(i);
+        });
+
+        const text=document.createElement("div");
+        text.className="text"+(item.done?" done":"");
+        text.contentEditable="true";
+        text.setAttribute("data-index",i);
+        text.setAttribute("spellcheck","false");
+        text.setAttribute("autocorrect","off");
+        text.setAttribute("autocapitalize","off");
+        text.setAttribute("autocomplete","off");
+        text.textContent=item.text;
+        text.addEventListener("input",()=>{
+            items[i].text=text.textContent;
+            save();
+        });
+        text.addEventListener("keydown",(e)=>handleKey(e,i));
+
+        row.appendChild(circle);
+        row.appendChild(text);
+        list.appendChild(row);
+    });
+}
+
+function toggle(i){
+    items[i].done=!items[i].done;
+    save();
+    render();
+}
+
+function caretOffset(el){
+    const sel=window.getSelection();
+    if(!sel.rangeCount) return 0;
+    const range=sel.getRangeAt(0);
+    const pre=range.cloneRange();
+    pre.selectNodeContents(el);
+    pre.setEnd(range.endContainer, range.endOffset);
+    return pre.toString().length;
+}
+
+function focusRow(index, offset){
+    const el=list.querySelector('.text[data-index="'+index+'"]');
+    if(!el) return;
+    el.focus();
+    const range=document.createRange();
+    const sel=window.getSelection();
+    if(el.firstChild){
+        const len=Math.min(offset, el.firstChild.length);
+        range.setStart(el.firstChild, len);
+    }else{
+        range.setStart(el,0);
+    }
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
+
+function handleKey(e,i){
+    if(e.key==="Enter"){
+        e.preventDefault();
+        const el=e.target;
+        const offset=caretOffset(el);
+        const full=el.textContent;
+        const before=full.slice(0,offset);
+        const after=full.slice(offset);
+        items[i].text=before;
+        items.splice(i+1,0,{text:after,done:false});
+        save();
+        render();
+        focusRow(i+1,0);
+    }else if(e.key==="Backspace"){
+        const el=e.target;
+        const offset=caretOffset(el);
+        if(offset===0 && i>0){
+            e.preventDefault();
+            const prevLen=items[i-1].text.length;
+            items[i-1].text+=items[i].text;
+            items.splice(i,1);
+            save();
+            render();
+            focusRow(i-1,prevLen);
+        }
+    }
+}
+
+render();
+
+window.addEventListener("load",()=>{
+    setTimeout(()=>{
+        focusRow(items.length-1, items[items.length-1].text.length);
+    },250);
+});
+
+function requestNotifyPermission(){
+    if("Notification" in window && Notification.permission==="default"){
+        Notification.requestPermission();
+    }
+}
+document.addEventListener("pointerdown", requestNotifyPermission, {once:true});
+
+function notifyUnchecked(){
+    if(!("Notification" in window)) return;
+    if(Notification.permission!=="granted") return;
+    const remaining=items.filter(it=>!it.done && it.text.trim()!=="").length;
+    if(remaining>0){
+        try{
+            new Notification("Chem Prep", {
+                body: remaining===1 ? "1 study task left today" : remaining+" study tasks left today",
+                icon: "icon-192.png"
+            });
+        }catch(e){}
+    }
+}
+document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState==="hidden"){
+        notifyUnchecked();
+    }
+});
+
+// ---------- Exam countdown ----------
+const examText=document.getElementById("examText");
+
+function loadExamDate(){
+    return localStorage.getItem("chem-examdate")||"";
+}
+function saveExamDate(v){
+    localStorage.setItem("chem-examdate", v);
+}
+
+function defaultExamDateStr(){
+    const d=new Date();
+    d.setMonth(d.getMonth()+3);
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+if(!loadExamDate()){
+    saveExamDate(defaultExamDateStr());
+}
+
+function renderExamBar(){
+    const v=loadExamDate();
+    const parts=v.split("-").map(Number);
+    const examD=new Date(parts[0],parts[1]-1,parts[2]);
+    const now=new Date();
+    const todayMid=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const diffDays=Math.round((examD-todayMid)/86400000);
+    if(diffDays>1){
+        examText.textContent=diffDays+" days until your IGCSE Chem exam";
+    }else if(diffDays===1){
+        examText.textContent="Exam is tomorrow \u2014 you've got this";
+    }else if(diffDays===0){
+        examText.textContent="Exam is today \u2014 good luck!";
+    }else{
+        examText.textContent="Exam date passed";
+    }
+}
+renderExamBar();
+
+
+// ---------- Calendar (daily planner archive) ----------
+const calBtn=document.getElementById("calBtn");
+const overlay=document.getElementById("overlay");
+const closeCal=document.getElementById("closeCal");
+const calView=document.getElementById("calView");
+const dayView=document.getElementById("dayView");
+const calGrid=document.getElementById("calGrid");
+const monthLabel=document.getElementById("monthLabel");
+const prevMonth=document.getElementById("prevMonth");
+const nextMonth=document.getElementById("nextMonth");
+const backToCal=document.getElementById("backToCal");
+const dayTitle=document.getElementById("dayTitle");
+const dayItems=document.getElementById("dayItems");
+
+const monthNames=["January","February","March","April","May","June","July","August","September","October","November","December"];
+let calDate=new Date();
+
+function keyFor(y,m,d){
+    return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+}
+
+function renderCalendar(){
+    const y=calDate.getFullYear();
+    const m=calDate.getMonth();
+    monthLabel.textContent=monthNames[m]+" "+y;
+    calGrid.innerHTML="";
+    const firstDow=new Date(y,m,1).getDay();
+    const daysInMonth=new Date(y,m+1,0).getDate();
+    for(let i=0;i<firstDow;i++){
+        const cell=document.createElement("div");
+        cell.className="dayCell empty";
+        calGrid.appendChild(cell);
+    }
+    for(let d=1;d<=daysInMonth;d++){
+        const key=keyFor(y,m,d);
+        const cell=document.createElement("div");
+        const hasData=Array.isArray(allDays[key]) && allDays[key].some(it=>it.text.trim()!=="");
+        cell.className="dayCell"+(hasData?" hasData":"")+(key===TODAY?" today":"");
+        const num=document.createElement("div");
+        num.textContent=d;
+        cell.appendChild(num);
+        if(hasData){
+            const dot=document.createElement("div");
+            dot.className="dot";
+            cell.appendChild(dot);
+        }
+        cell.addEventListener("click",()=>openDay(key,d));
+        calGrid.appendChild(cell);
+    }
+}
+
+let dayLastToggled=null;
+
+function ensureDay(key){
+    if(!Array.isArray(allDays[key]) || allDays[key].length===0){
+        allDays[key]=[{text:"",done:false}];
+    }
+    return allDays[key];
+}
+
+function dayFocusRow(index,offset){
+    const el=dayItems.querySelector('.viewText[data-index="'+index+'"]');
+    if(!el) return;
+    el.focus();
+    const range=document.createRange();
+    const sel=window.getSelection();
+    if(el.firstChild){
+        const len=Math.min(offset, el.firstChild.length);
+        range.setStart(el.firstChild, len);
+    }else{
+        range.setStart(el,0);
+    }
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
+
+function renderDayList(key){
+    const arr=ensureDay(key);
+    dayItems.innerHTML="";
+    arr.forEach((item,i)=>{
+        const row=document.createElement("div");
+        row.className="viewRow";
+
+        const circle=document.createElement("button");
+        circle.type="button";
+        circle.className="viewCircle"+(item.done?" done":"");
+        circle.innerHTML=checkSVG;
+        if(i===dayLastToggled){
+            circle.classList.add("pop");
+            circle.addEventListener("animationend",()=>circle.classList.remove("pop"));
+        }
+        circle.addEventListener("click",()=>{
+            const willBeDone=!allDays[key][i].done;
+            if(navigator.vibrate) navigator.vibrate(15);
+            playTick(willBeDone);
+            if(willBeDone) spawnBubbles(circle);
+            dayLastToggled=i;
+            allDays[key][i].done=willBeDone;
+            saveAllDays(allDays);
+            if(key===TODAY){ items=allDays[TODAY]; }
+            renderDayList(key);
+        });
+
+        const text=document.createElement("div");
+        text.className="viewText"+(item.done?" done":"");
+        text.contentEditable="true";
+        text.setAttribute("data-index",i);
+        text.setAttribute("spellcheck","false");
+        text.setAttribute("autocorrect","off");
+        text.setAttribute("autocapitalize","off");
+        text.setAttribute("autocomplete","off");
+        text.textContent=item.text;
+        text.addEventListener("input",()=>{
+            allDays[key][i].text=text.textContent;
+            saveAllDays(allDays);
+            if(key===TODAY){ items=allDays[TODAY]; }
+        });
+        text.addEventListener("keydown",(e)=>{
+            const arr2=allDays[key];
+            if(e.key==="Enter"){
+                e.preventDefault();
+                const el=e.target;
+                const offset=caretOffset(el);
+                const full=el.textContent;
+                const before=full.slice(0,offset);
+                const after=full.slice(offset);
+                arr2[i].text=before;
+                arr2.splice(i+1,0,{text:after,done:false});
+                saveAllDays(allDays);
+                if(key===TODAY){ items=allDays[TODAY]; }
+                renderDayList(key);
+                dayFocusRow(i+1,0);
+            }else if(e.key==="Backspace"){
+                const el=e.target;
+                const offset=caretOffset(el);
+                if(offset===0 && i>0){
+                    e.preventDefault();
+                    const prevLen=arr2[i-1].text.length;
+                    arr2[i-1].text+=arr2[i].text;
+                    arr2.splice(i,1);
+                    saveAllDays(allDays);
+                    if(key===TODAY){ items=allDays[TODAY]; }
+                    renderDayList(key);
+                    dayFocusRow(i-1,prevLen);
+                }
+            }
+        });
+
+        row.appendChild(circle);
+        row.appendChild(text);
+        dayItems.appendChild(row);
+    });
+}
+
+function openDay(key,dayNum){
+    dayTitle.textContent=monthNames[calDate.getMonth()]+" "+dayNum+", "+calDate.getFullYear();
+    renderDayList(key);
+    calView.style.display="none";
+    dayView.classList.add("open");
+    setTimeout(()=>{
+        const arr=allDays[key]||[];
+        dayFocusRow(arr.length-1, (arr[arr.length-1]||{text:""}).text.length);
+    },50);
+}
+
+calBtn.addEventListener("click",()=>{
+    calDate=new Date();
+    renderCalendar();
+    calView.style.display="block";
+    dayView.classList.remove("open");
+    overlay.classList.add("open");
+    document.body.classList.add("overlayOpen");
+});
+closeCal.addEventListener("click",()=>{
+    overlay.classList.remove("open");
+    document.body.classList.remove("overlayOpen");
+    render();
+});
+prevMonth.addEventListener("click",()=>{
+    calDate.setMonth(calDate.getMonth()-1);
+    renderCalendar();
+});
+nextMonth.addEventListener("click",()=>{
+    calDate.setMonth(calDate.getMonth()+1);
+    renderCalendar();
+});
+backToCal.addEventListener("click",()=>{
+    dayView.classList.remove("open");
+    calView.style.display="block";
+    renderCalendar();
+});
+
+let touchStartX=null;
+let touchStartY=null;
+calView.addEventListener("touchstart",(e)=>{
+    touchStartX=e.touches[0].clientX;
+    touchStartY=e.touches[0].clientY;
+},{passive:true});
+calView.addEventListener("touchend",(e)=>{
+    if(touchStartX===null) return;
+    const dx=e.changedTouches[0].clientX-touchStartX;
+    const dy=e.changedTouches[0].clientY-touchStartY;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)){
+        if(dx<0){ calDate.setMonth(calDate.getMonth()+1); }
+        else{ calDate.setMonth(calDate.getMonth()-1); }
+        renderCalendar();
+    }
+    touchStartX=null;
+    touchStartY=null;
+},{passive:true});
+
+// ---------- Chapters / Lessons tracker ----------
+const chaptersBtn=document.getElementById("chaptersBtn");
+const chaptersOverlay=document.getElementById("chaptersOverlay");
+const closeChapters=document.getElementById("closeChapters");
+const chapterItems=document.getElementById("chapterItems");
+const progressCount=document.getElementById("progressCount");
+const progressPct=document.getElementById("progressPct");
+const progressFill=document.getElementById("progressFill");
+const motivateText=document.getElementById("motivateText");
+
+function defaultChapters(){
+    const arr=[];
+    for(let i=1;i<=22;i++){
+        arr.push({title:"Chapter "+i, expanded:false, lessons:[{text:"",done:false}]});
+    }
+    return arr;
+}
+
+function loadChapters(){
+    try{
+        const raw=JSON.parse(localStorage.getItem("chem-chapters"));
+        if(Array.isArray(raw) && raw.length===22) return raw;
+    }catch(e){}
+    return defaultChapters();
+}
+function saveChapters(){
+    localStorage.setItem("chem-chapters", JSON.stringify(chapters));
+}
+
+let chapters=loadChapters();
+let chapterLastToggled=null;
+
+function updateProgress(){
+    let total=0, done=0;
+    chapters.forEach(ch=>{
+        ch.lessons.forEach(l=>{
+            if(l.text.trim()!==""){
+                total++;
+                if(l.done) done++;
+            }
+        });
+    });
+    const pct=total>0?Math.round((done/total)*100):0;
+    progressCount.textContent=done+" of "+total+" lessons done";
+    progressPct.textContent=pct+"%";
+    progressFill.style.width=pct+"%";
+    if(total===0){
+        motivateText.textContent="Add your first lesson to get going";
+    }else if(pct===0){
+        motivateText.textContent="Let's get started";
+    }else if(pct<50){
+        motivateText.textContent="Nice progress \u2014 keep going";
+    }else if(pct<100){
+        motivateText.textContent="Over halfway there";
+    }else{
+        motivateText.textContent="All chapters complete \u2014 exam ready";
+    }
+}
+
+function lessonFocus(ci,li,offset){
+    const el=chapterItems.querySelector('.viewText[data-chapter="'+ci+'"][data-index="'+li+'"]');
+    if(!el) return;
+    el.focus();
+    const range=document.createRange();
+    const sel=window.getSelection();
+    if(el.firstChild){
+        const len=Math.min(offset, el.firstChild.length);
+        range.setStart(el.firstChild, len);
+    }else{
+        range.setStart(el,0);
+    }
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
+
+function toggleChapter(ci, headerEl){
+    const block=headerEl.closest(".chapterBlock");
+    const content=block.querySelector(".chapterLessons");
+    const nowExpand=!chapters[ci].expanded;
+    chapters[ci].expanded=nowExpand;
+    saveChapters();
+    if(nowExpand){
+        block.classList.add("expanded");
+        content.style.maxHeight=content.scrollHeight+"px";
+        content.addEventListener("transitionend", function h(){
+            if(chapters[ci].expanded) content.style.maxHeight="none";
+            content.removeEventListener("transitionend",h);
+        }, {once:true});
+    }else{
+        content.style.maxHeight=content.scrollHeight+"px";
+        requestAnimationFrame(()=>{
+            block.classList.remove("expanded");
+            content.style.maxHeight="0px";
+        });
+    }
+}
+
+function renderChapters(){
+    chapterItems.innerHTML="";
+    chapters.forEach((ch,ci)=>{
+        const block=document.createElement("div");
+        block.className="chapterBlock"+(ch.expanded?" expanded":"");
+
+        const header=document.createElement("div");
+        header.className="chapterHeader";
+
+        const left=document.createElement("div");
+        left.className="chapterHeaderLeft";
+        const title=document.createElement("div");
+        title.className="chapterTitleTxt";
+        title.textContent=ch.title;
+        const realLessons=ch.lessons.filter(l=>l.text.trim()!=="");
+        const doneCount=realLessons.filter(l=>l.done).length;
+        const count=document.createElement("div");
+        count.className="chapterCount";
+        count.textContent=realLessons.length>0 ? (doneCount+" of "+realLessons.length+" lessons") : "No lessons yet";
+        left.appendChild(title);
+        left.appendChild(count);
+
+        const arrow=document.createElement("div");
+        arrow.className="chapterArrow";
+        arrow.innerHTML=arrowSVG;
+
+        header.appendChild(left);
+        header.appendChild(arrow);
+        header.addEventListener("click",()=>toggleChapter(ci, header));
+
+        const lessonsWrap=document.createElement("div");
+        lessonsWrap.className="chapterLessons";
+        lessonsWrap.style.maxHeight=ch.expanded ? "none" : "0px";
+
+        const inner=document.createElement("div");
+        inner.className="chapterLessonsInner";
+
+        ch.lessons.forEach((item,li)=>{
+            const row=document.createElement("div");
+            row.className="viewRow";
+
+            const circle=document.createElement("button");
+            circle.type="button";
+            circle.className="viewCircle"+(item.done?" done":"");
+            circle.innerHTML=checkSVG;
+            if(chapterLastToggled && chapterLastToggled.ci===ci && chapterLastToggled.li===li){
+                circle.classList.add("pop");
+                circle.addEventListener("animationend",()=>circle.classList.remove("pop"));
+            }
+            circle.addEventListener("click",()=>{
+                const willBeDone=!chapters[ci].lessons[li].done;
+                if(navigator.vibrate) navigator.vibrate(15);
+                playTick(willBeDone);
+                if(willBeDone) spawnBubbles(circle);
+                chapterLastToggled={ci,li};
+                chapters[ci].lessons[li].done=willBeDone;
+                saveChapters();
+                renderChapters();
+            });
+
+            const text=document.createElement("div");
+            text.className="viewText"+(item.done?" done":"");
+            text.contentEditable="true";
+            text.setAttribute("data-chapter",ci);
+            text.setAttribute("data-index",li);
+            text.setAttribute("spellcheck","false");
+            text.setAttribute("autocorrect","off");
+            text.setAttribute("autocapitalize","off");
+            text.setAttribute("autocomplete","off");
+            text.textContent=item.text;
+            text.addEventListener("input",()=>{
+                chapters[ci].lessons[li].text=text.textContent;
+                saveChapters();
+                updateProgress();
+                const cnt=block.querySelector(".chapterCount");
+                const real=chapters[ci].lessons.filter(l=>l.text.trim()!=="");
+                const dc=real.filter(l=>l.done).length;
+                cnt.textContent=real.length>0 ? (dc+" of "+real.length+" lessons") : "No lessons yet";
+                if(chapters[ci].expanded){
+                    lessonsWrap.style.maxHeight="none";
+                }
+            });
+            text.addEventListener("keydown",(e)=>{
+                const larr=chapters[ci].lessons;
+                if(e.key==="Enter"){
+                    e.preventDefault();
+                    const el=e.target;
+                    const offset=caretOffset(el);
+                    const full=el.textContent;
+                    const before=full.slice(0,offset);
+                    const after=full.slice(offset);
+                    larr[li].text=before;
+                    larr.splice(li+1,0,{text:after,done:false});
+                    saveChapters();
+                    renderChapters();
+                    updateProgress();
+                    lessonFocus(ci,li+1,0);
+                }else if(e.key==="Backspace"){
+                    const el=e.target;
+                    const offset=caretOffset(el);
+                    if(offset===0 && li>0){
+                        e.preventDefault();
+                        const prevLen=larr[li-1].text.length;
+                        larr[li-1].text+=larr[li].text;
+                        larr.splice(li,1);
+                        saveChapters();
+                        renderChapters();
+                        updateProgress();
+                        lessonFocus(ci,li-1,prevLen);
+                    }
+                }
+            });
+
+            row.appendChild(circle);
+            row.appendChild(text);
+            inner.appendChild(row);
+        });
+
+        lessonsWrap.appendChild(inner);
+        block.appendChild(header);
+        block.appendChild(lessonsWrap);
+        chapterItems.appendChild(block);
+    });
+    updateProgress();
+}
+
+chaptersBtn.addEventListener("click",()=>{
+    renderChapters();
+    chaptersOverlay.classList.add("open");
+    document.body.classList.add("overlayOpen");
+});
+closeChapters.addEventListener("click",()=>{
+    chaptersOverlay.classList.remove("open");
+    document.body.classList.remove("overlayOpen");
+});
+</script>
+</body>
+</html>
